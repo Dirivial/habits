@@ -9,7 +9,7 @@ export default function MyHabits() {
   const [newHabit, setNewHabit] = useState("");
   const [selectedHabit, setSelectedHabit] = useState<number>(0);
   const [newName, setNewName] = useState("");
-  const [parent, enableAnimations] = useAutoAnimate();
+  const [parent] = useAutoAnimate();
   const myModal = useRef<HTMLDialogElement>(null);
 
   const { data: sessionData } = useSession();
