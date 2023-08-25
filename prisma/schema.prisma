@@ -70,6 +70,7 @@ model Habit {
     id            String   @id @default(cuid())
     name          String
     lastPerformed DateTime @default(now())
+    done          Boolean  @default(false)
     userId        String
     user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

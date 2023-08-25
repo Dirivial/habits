@@ -1,9 +1,9 @@
 import { useSession } from "next-auth/react";
 import Head from "next/head";
-import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "~/utils/api";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { type Habit } from "@prisma/client";
 
 export default function MyHabits() {
   const [newHabit, setNewHabit] = useState("");
@@ -40,22 +40,29 @@ export default function MyHabits() {
   };
 
   const handleHabitEdited = () => {
-    //console.log("edited habit " + selectedHabit);
-    //api.habit.update.useMutation({ id: selectedHabit, name: newName });
     updateHabit.mutate({
       id: habits?.at(selectedHabit)?.id ?? "",
       name: newName,
       lastPerformed: habits?.at(selectedHabit)?.lastPerformed ?? new Date(),
+      done: habits?.at(selectedHabit)?.done ?? false,
     });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    //refetchHabits();
   };
 
-  const handleHabitCompleted = () => {
+  const handleHabitCompleted = (done: boolean, habit: Habit) => {
     updateHabit.mutate({
-      id: habits?.at(selectedHabit)?.id ?? "",
-      name: habits?.at(selectedHabit)?.name ?? "",
-      lastPerformed: habits?.at(selectedHabit)?.lastPerformed ?? new Date(),
+      id: habit.id,
+      name: habit.name,
+      lastPerformed: habit.lastPerformed,
+      done: done,
+    });
+  };
+
+  const handleOldData = (lastPerformed: Date, done: boolean, habit: Habit) => {
+    updateHabit.mutate({
+      id: habit.id,
+      name: habit.name,
+      lastPerformed: lastPerformed,
+      done: done,
     });
   };
 
@@ -88,8 +95,15 @@ export default function MyHabits() {
               return (
                 <HabitItem
                   name={habit.name}
+                  lastPerformed={habit.lastPerformed}
+                  done={habit.done}
+                  oldData={(lastPerformed: Date, done: boolean) =>
+                    handleOldData(lastPerformed, done, habit)
+                  }
                   edit={() => handleHabitEdit(index)}
-                  habitDone={handleHabitCompleted}
+                  habitDone={(isDone: boolean) =>
+                    handleHabitCompleted(isDone, habit)
+                  }
                   key={index}
                 />
               );
@@ -122,16 +136,59 @@ export default function MyHabits() {
 
 interface HabitItem {
   name: string;
+  lastPerformed: Date;
+  done: boolean;
+  oldData: (lastPerformed: Date, done: boolean) => void;
   edit: () => void;
-  habitDone: () => void;
+  habitDone: (isDone: boolean) => void;
 }
 
 function HabitItem(props: HabitItem) {
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(props.done);
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  };
+
+  const isYesterday = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return (
+      date.getFullYear() === yesterday.getFullYear() &&
+      date.getMonth() === yesterday.getMonth() &&
+      date.getDate() === yesterday.getDate()
+    );
+  };
+
+  useEffect(() => {
+    if (props.done) {
+      const lastPerformed = new Date(props.lastPerformed);
+      if (isToday(lastPerformed)) {
+        setChecked(true);
+      } else if (isYesterday(lastPerformed)) {
+        setChecked(false);
+        props.oldData(lastPerformed, false);
+        console.log(
+          "The habit" +
+            props.name +
+            " was done yesterday, updating its last performed date to today."
+        );
+      } else {
+        setChecked(false);
+        props.habitDone(false);
+      }
+    }
+  }, [props]);
 
   const handleCheckboxClicked = () => {
+    props.habitDone(!checked);
     setChecked(!checked);
-    props.habitDone();
   };
 
   return (
@@ -139,6 +196,7 @@ function HabitItem(props: HabitItem) {
       <h3 className="text-xl font-bold sm:text-[1.5rem]" onClick={props.edit}>
         {props.name}
       </h3>
+      <p>{props.lastPerformed.getDay()}</p>
       <input
         type="checkbox"
         defaultChecked={checked}

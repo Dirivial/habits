@@ -10,12 +10,21 @@ export const habitRouter = createTRPCRouter({
 
   update: protectedProcedure
     .input(
-      z.object({ id: z.string(), name: z.string(), lastPerformed: z.date() })
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        lastPerformed: z.date(),
+        done: z.boolean(),
+      })
     )
     .mutation(({ ctx, input }) => {
       return ctx.prisma.habit.update({
         where: { id: input.id },
-        data: { name: input.name, lastPerformed: input.lastPerformed },
+        data: {
+          name: input.name,
+          lastPerformed: input.lastPerformed,
+          done: input.done,
+        },
       });
     }),
 
