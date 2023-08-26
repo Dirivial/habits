@@ -14,7 +14,9 @@ export const habitRouter = createTRPCRouter({
         id: z.string(),
         name: z.string(),
         lastPerformed: z.date(),
+        streak: z.number(),
         done: z.boolean(),
+        goal: z.number(),
       })
     )
     .mutation(({ ctx, input }) => {
@@ -23,7 +25,9 @@ export const habitRouter = createTRPCRouter({
         data: {
           name: input.name,
           lastPerformed: input.lastPerformed,
+          streak: input.streak,
           done: input.done,
+          goal: input.goal,
         },
       });
     }),
@@ -37,5 +41,11 @@ export const habitRouter = createTRPCRouter({
           userId: ctx.session.user.id,
         },
       });
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(({ ctx, input }) => {
+      return ctx.prisma.habit.delete({ where: { id: input.id } });
     }),
 });
