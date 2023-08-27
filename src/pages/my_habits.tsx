@@ -1,10 +1,11 @@
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { api } from "~/utils/api";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { type Habit } from "@prisma/client";
 import { themeChange } from "theme-change";
+import { useRouter } from "next/navigation";
 
 export default function MyHabits() {
   const [newHabit, setNewHabit] = useState("");
@@ -13,8 +14,16 @@ export default function MyHabits() {
   const [newGoal, setNewGoal] = useState(0);
   const [parent] = useAutoAnimate();
   const myModal = useRef<HTMLDialogElement>(null);
+  const router = useRouter();
 
   const { data: sessionData } = useSession();
+
+  useEffect(() => {
+    if (sessionData?.user === undefined) {
+      router.push("/");
+    }
+  }, [router, sessionData]);
+
   const { data: habits, refetch: refetchHabits } =
     api.habit.getUserHabits.useQuery(undefined, {
       enabled: sessionData?.user !== undefined,
@@ -137,6 +146,10 @@ export default function MyHabits() {
     myModal.current?.close();
   };
 
+  const handleLogout = () => {
+    void signOut();
+  };
+
   return (
     <>
       <Head>
@@ -151,9 +164,13 @@ export default function MyHabits() {
           </h1>
 
           <div ref={parent} className="grid w-full grid-cols-1 gap-4 md:gap-8">
-            <div className="grid w-full grid-cols-3 gap-x-2">
-              <div></div>
-              <div className="flex gap-2">
+            <div className="flex w-full flex-row justify-between gap-x-2">
+              <div className="my-auto">
+                <button className="btn" onClick={handleLogout}>
+                  Logout
+                </button>
+              </div>
+              <div className="my-auto flex flex-col gap-2 sm:flex-row">
                 <input
                   type="text"
                   placeholder="New Habit"
@@ -165,7 +182,7 @@ export default function MyHabits() {
                   Add
                 </button>
               </div>
-              <div className="flex justify-end px-2">
+              <div className="my-auto flex justify-end px-2">
                 <div className="dropdown dropdown-end">
                   <label tabIndex={0} className="btn my-2">
                     Theme
@@ -325,10 +342,12 @@ function HabitItem(props: HabitItem) {
       >
         <input
           type="checkbox"
-          defaultChecked={checked}
           onClick={handleCheckboxClicked}
           className="checkbox my-auto"
           checked={checked}
+          onChange={() => {
+            null;
+          }}
         />
       </div>
     </div>
