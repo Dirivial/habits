@@ -10,8 +10,8 @@ export default function MyHabits() {
   const [newHabit, setNewHabit] = useState("");
   const [selectedHabit, setSelectedHabit] = useState<number>(0);
   const [newName, setNewName] = useState("");
+  const [newGoal, setNewGoal] = useState(0);
   const [parent] = useAutoAnimate();
-  const [darkTheme, setDarkTheme] = useState(true);
   const myModal = useRef<HTMLDialogElement>(null);
 
   const { data: sessionData } = useSession();
@@ -66,6 +66,7 @@ export default function MyHabits() {
   const handleHabitEdit = (habitId: number) => {
     setSelectedHabit(habitId);
     setNewName(habits?.at(habitId)?.name ?? "");
+    setNewGoal(habits?.at(habitId)?.goal ?? 0);
     myModal.current?.showModal();
   };
 
@@ -76,7 +77,7 @@ export default function MyHabits() {
       lastPerformed: habits?.at(selectedHabit)?.lastPerformed ?? new Date(),
       done: habits?.at(selectedHabit)?.done ?? false,
       streak: habits?.at(selectedHabit)?.streak ?? 0,
-      goal: habits?.at(selectedHabit)?.goal ?? 0,
+      goal: newGoal,
     });
   };
 
@@ -133,12 +134,7 @@ export default function MyHabits() {
     if (habit) {
       deleteHabit.mutate({ id: habit.id });
     }
-  };
-
-  const handleThemeChange = () => {
-    console.log("Changed darktheme to ", !darkTheme);
-    //themeChange(!darkTheme);
-    setDarkTheme(!darkTheme);
+    myModal.current?.close();
   };
 
   return (
@@ -209,32 +205,50 @@ export default function MyHabits() {
         <dialog ref={myModal} id="habit_modal" className="modal">
           <form method="dialog" className="modal-box">
             <h3 className="text-lg font-bold">Edit Habit</h3>
-            <input
-              type="text"
-              placeholder={habits?.at(selectedHabit)?.name}
-              className="input w-full"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <details className="dropdown dropdown-right">
-              <summary className="btn my-2">
-                Streak: {habits?.at(selectedHabit)?.streak}
-              </summary>
-              <ul className="menu dropdown-content rounded-box z-[1] my-1.5 w-52 bg-base-200 p-2 shadow">
+            <div>
+              <label className="label">Name</label>
+              <input
+                type="text"
+                placeholder={habits?.at(selectedHabit)?.name}
+                className="input w-full"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+              />
+            </div>
+
+            <div className="dropdown dropdown-right">
+              <label tabIndex={0} className="btn my-2">
+                Current Streak: {habits?.at(selectedHabit)?.streak}
+              </label>
+              <ul
+                tabIndex={0}
+                className="menu dropdown-content rounded-box z-[1] my-1.5 w-52 bg-base-200 p-2 shadow"
+              >
                 <li>
                   <a onClick={resetStreak}>Reset Streak</a>
                 </li>
               </ul>
-            </details>
+            </div>
+
+            <div>
+              <label className="label">Goal</label>
+              <input
+                type="number"
+                placeholder={"Set a streak goal"}
+                className="input w-full"
+                value={newGoal}
+                onChange={(e) => setNewGoal(Number(e.target.value))}
+              />
+            </div>
 
             <div className="modal-action flex justify-between">
               {/* if there is a button in form, it will close the modal */}
-              <button
+              <a
                 onClick={handleDeleteHabit}
                 className="btn btn-warning text-warning-content"
               >
                 Delete
-              </button>
+              </a>
               <button onClick={handleHabitEdited} className="btn">
                 Close
               </button>
@@ -297,17 +311,26 @@ function HabitItem(props: HabitItem) {
   }
 
   return (
-    <div className="flex flex-row items-baseline justify-between gap-4 rounded-xl bg-base-300 p-4 text-base-content hover:bg-primary-focus hover:text-primary-content">
-      <h3 className="text-xl font-bold sm:text-[1.5rem]" onClick={props.edit}>
-        {props.name}
-      </h3>
-      <p>{props.lastPerformed.getDate()}</p>
-      <input
-        type="checkbox"
-        defaultChecked={checked}
+    <div className="flex gap-1 rounded-xl bg-base-300 p-1 transition-colors hover:bg-primary hover:shadow-md">
+      <div
+        onClick={props.edit}
+        className="flex flex-grow cursor-pointer flex-row items-baseline justify-between gap-4 rounded-lg bg-base-300 p-4 text-base-content"
+      >
+        <h3 className="text-xl font-bold sm:text-[1.5rem]">{props.name}</h3>
+        <p>{props.lastPerformed.getDate()}</p>
+      </div>
+      <div
+        className="grid cursor-pointer rounded-lg bg-base-300 px-4 py-2"
         onClick={handleCheckboxClicked}
-        className="checkbox my-auto"
-      />
+      >
+        <input
+          type="checkbox"
+          defaultChecked={checked}
+          onClick={handleCheckboxClicked}
+          className="checkbox my-auto"
+          checked={checked}
+        />
+      </div>
     </div>
   );
 }
