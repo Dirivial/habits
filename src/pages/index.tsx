@@ -1,20 +1,9 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
-import Link from "next/link";
-import { api } from "~/utils/api";
-import autoAnimate from "@formkit/auto-animate";
-import { useEffect, useRef } from "react";
-import { router } from "@trpc/server";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
-  const parent = useRef(null);
-
-  useEffect(() => {
-    parent.current && autoAnimate(parent.current);
-  }, [parent]);
-
   return (
     <>
       <Head>
