@@ -218,7 +218,7 @@ export default function MyHabits() {
 
             <div className="dropdown dropdown-right">
               <label tabIndex={0} className="btn my-2">
-                Current Streak: {habits?.at(selectedHabit)?.streak}
+                {habits?.at(selectedHabit)?.streak} 🔥
               </label>
               <ul
                 tabIndex={0}
@@ -317,7 +317,7 @@ function HabitItem(props: HabitItem) {
         className="flex flex-grow cursor-pointer flex-row items-baseline justify-between gap-4 rounded-lg bg-base-300 p-4 text-base-content"
       >
         <h3 className="text-xl font-bold sm:text-[1.5rem]">{props.name}</h3>
-        <p>{props.lastPerformed.getDate()}</p>
+        <p className="my-auto whitespace-nowrap">{props.habit.streak} 🔥</p>
       </div>
       <div
         className="grid cursor-pointer rounded-lg bg-base-300 px-4 py-2"
